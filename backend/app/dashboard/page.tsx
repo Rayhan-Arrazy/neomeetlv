@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "../components/ui/button"
 import { Card, CardContent } from "../components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar"
-import { Video, Plus, Calendar, BookOpen, Settings, Bell, ChevronLeft, ChevronRight } from "lucide-react"
+import { Video, Plus, Calendar, BookOpen, Settings, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import { BottomNavigation } from "../components/navigation"
 
@@ -96,9 +96,6 @@ export default function DashboardPage() {
             <span className="ml-2 text-xl font-bold text-slate-800">NeoMeet</span>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon">
-              <Bell className="w-5 h-5" />
-            </Button>
             <Link href="/profile">
               <Avatar className="w-8 h-8">
                 <AvatarImage src="/professional-headshot.png" />
@@ -129,29 +126,11 @@ export default function DashboardPage() {
             </Card>
           </Link>
 
-          <Link href="/classes/create">
-            <Card className="border-0 shadow-lg rounded-2xl bg-orange-500 text-white hover:bg-orange-600 transition-colors">
-              <CardContent className="p-4 text-center">
-                <Plus className="w-8 h-8 mx-auto mb-2" />
-                <p className="font-semibold">Create Class</p>
-              </CardContent>
-            </Card>
-          </Link>
-
           <Link href="/schedule">
             <Card className="border-0 shadow-lg rounded-2xl bg-green-500 text-white hover:bg-green-600 transition-colors">
               <CardContent className="p-4 text-center">
                 <Calendar className="w-8 h-8 mx-auto mb-2" />
                 <p className="font-semibold">My Schedule</p>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/resources">
-            <Card className="border-0 shadow-lg rounded-2xl bg-slate-700 text-white hover:bg-slate-800 transition-colors">
-              <CardContent className="p-4 text-center">
-                <BookOpen className="w-8 h-8 mx-auto mb-2" />
-                <p className="font-semibold">Resources</p>
               </CardContent>
             </Card>
           </Link>

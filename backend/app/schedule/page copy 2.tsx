@@ -3,13 +3,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-// --- FIX: Add missing imports ---
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { Input } from "../components/ui/input"; // This was the main missing import
-import { ChevronLeft, ChevronRight, Plus, Calendar, Clock, Edit, Trash2, X } from "lucide-react";
-// --- FIX: Update the import path for useAuth ---
+import { ChevronLeft, ChevronRight, Plus, Calendar, Clock, MapPin, Users, Video, Edit, Trash2, X } from "lucide-react";
 import { useAuth } from "../signup/AuthContext";
 import { getSchedules, createSchedule, updateSchedule, deleteSchedule, Schedule } from "../lib/utils";
 import { BottomNavigation } from "../components/navigation";
@@ -27,10 +24,8 @@ export default function SchedulePage() {
     const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
     const [formData, setFormData] = useState({ title: '', description: '', date: '', time: '' });
 
-    // --- FIX: Add a simple type to the 'role' parameter ---
-    const isAdmin = user?.roles.some((role: { name: string }) => role.name === 'admin');
+    const isAdmin = user?.roles.some(role => role.name === 'admin');
 
-    // ... the rest of the component code remains the same ...
     const loadEvents = async () => {
         setLoading(true);
         try {

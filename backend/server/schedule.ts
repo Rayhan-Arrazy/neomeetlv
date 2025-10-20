@@ -1,29 +1,26 @@
-// server/schedules.ts
-
 "use server";
 
 export interface Schedule {
-  id: number;
-  user_id: number;
-  event_title: string;
-  start_time: string;
-  end_time: string;
-  location: string;
-  description?: string;
-  type?: string;
-  is_virtual: boolean;
-  meeting_link?: string;
-  attendees?: string;
-  is_recurring: boolean;
-  recurrence_pattern?: string;
-  recurrence_end?: string;
-  reminder: string;
-  is_private: boolean;
+    id: number;
+    user_id: number;
+    event_title: string;
+    start_time: string;
+    end_time: string;
+    location: string;
+    description?: string;
+    type?: string;
+    is_virtual: boolean;
+    meeting_link?: string;
+    attendees?: string;
+    is_recurring: boolean;
+    recurrence_pattern?: string;
+    recurrence_end?: string;
+    reminder: string;
+    is_private: boolean;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// CREATE
 export const create = async (formData: Partial<Schedule>): Promise<Schedule | null> => {
     try {
         const res = await fetch(`${API_URL}/api/schedules`, {
@@ -31,29 +28,48 @@ export const create = async (formData: Partial<Schedule>): Promise<Schedule | nu
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData),
         });
-        if (!res.ok) throw new Error('Failed to create schedule');
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.message || 'Failed to create schedule');
+        }
         const json = await res.json();
         return json.data;
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error creating schedule:", error);
         return null;
     }
 };
 
-// READ (Get All)
 export const getAll = async (): Promise<Schedule[]> => {
     try {
         const res = await fetch(`${API_URL}/api/schedules`);
-        if (!res.ok) throw new Error('Failed to fetch schedules');
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.message || 'Failed to fetch schedules');
+        }
         const json = await res.json();
         return json.data;
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error fetching schedules:", error);
         return [];
     }
 };
 
-// UPDATE
+export const getById = async (id: number): Promise<Schedule | null> => {
+    try {
+        const res = await fetch(`${API_URL}/api/schedules/${id}`);
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.message || 'Failed to fetch schedule');
+        }
+        const json = await res.json();
+        return json.data;
+    } catch (error: any) {
+        console.error(`Error fetching schedule ${id}:`, error);
+        return null;
+    }
+};
+
 export const update = async (id: number, formData: Partial<Schedule>): Promise<Schedule | null> => {
     try {
         const res = await fetch(`${API_URL}/api/schedules/${id}`, {
@@ -61,16 +77,18 @@ export const update = async (id: number, formData: Partial<Schedule>): Promise<S
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData),
         });
-        if (!res.ok) throw new Error('Failed to update schedule');
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.message || 'Failed to update schedule');
+        }
         const json = await res.json();
         return json.data;
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error updating schedule:", error);
         return null;
     }
 };
 
-// DELETE
 export const remove = async (id: number): Promise<boolean> => {
     if (!confirm('Are you sure you want to delete this schedule?')) return false;
     try {
@@ -78,7 +96,7 @@ export const remove = async (id: number): Promise<boolean> => {
             method: 'DELETE',
         });
         return res.ok;
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error deleting schedule:", error);
         return false;
     }

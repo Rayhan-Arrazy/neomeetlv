@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
 import type React from "react"
-import { useState } from "react"
-import { Button } from "../../components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
-import { Input } from "../../components/ui/input"
-import { Label } from "../../components/ui/label"
-import { Textarea } from "../../components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
-import { Switch } from "../../components/ui/switch"
-import { ArrowLeft, Calendar, Clock, MapPin, Users, Repeat, Bell } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { create } from "../../../server/schedule"
+import { useState } from "react";
+import { Button } from "../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import { Switch } from "../../components/ui/switch";
+import { ArrowLeft, Calendar, Clock, MapPin, Users, Repeat, Bell } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { create } from "../../../server/schedule";
 
 export default function CreateEventPage() {
   const [formData, setFormData] = useState({
@@ -31,9 +31,9 @@ export default function CreateEventPage() {
     recurrence_end: "",
     reminder: "15",
     is_private: false,
-  })
-  const [isCreating, setIsCreating] = useState(false)
-  const router = useRouter()
+  });
+  const [isCreating, setIsCreating] = useState(false);
+  const router = useRouter();
 
   const eventTypes = [
     { value: "meeting", label: "Meeting" },
@@ -42,13 +42,13 @@ export default function CreateEventPage() {
     { value: "presentation", label: "Presentation" },
     { value: "interview", label: "Interview" },
     { value: "other", label: "Other" },
-  ]
+  ];
 
   const recurrenceOptions = [
     { value: "daily", label: "Daily" },
     { value: "weekly", label: "Weekly" },
     { value: "monthly", label: "Monthly" },
-  ]
+  ];
 
   const reminderOptions = [
     { value: "5", label: "5 minutes before" },
@@ -56,34 +56,34 @@ export default function CreateEventPage() {
     { value: "30", label: "30 minutes before" },
     { value: "60", label: "1 hour before" },
     { value: "1440", label: "1 day before" },
-  ]
+  ];
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleCreateEvent = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsCreating(true)
+    e.preventDefault();
+    setIsCreating(true);
 
     const startDateTime = `${formData.date}T${formData.start_time}`;
     const endDateTime = `${formData.date}T${formData.end_time}`;
 
     const payload = {
-        ...formData,
-        start_time: startDateTime,
-        end_time: endDateTime,
+      ...formData,
+      start_time: startDateTime,
+      end_time: endDateTime,
     };
 
     try {
-        await create(payload);
-        window.location.href = "/schedule"
+      await create(payload);
+      window.location.href = "/schedule";
     } catch (error: any) {
-        alert(error.message)
+      alert(error.message);
     } finally {
-        setIsCreating(false)
+      setIsCreating(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-20">
@@ -213,7 +213,7 @@ export default function CreateEventPage() {
                     </div>
                   </div>
                 </div>
-              </div>
+ </div>
 
               <div className="space-y-4 pt-4 border-t border-slate-200">
                 <h3 className="font-semibold text-slate-800">Location</h3>
@@ -385,5 +385,5 @@ export default function CreateEventPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

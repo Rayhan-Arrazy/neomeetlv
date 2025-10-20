@@ -14,7 +14,7 @@ export function BottomNavigation() {
     { href: "/dashboard", icon: "N", label: "Home", isLogo: true },
     { href: "/meetings", icon: Video, label: "Meetings" },
     { href: "/schedule", icon: Calendar, label: "Schedule" },
-    { href: "/resources", icon: BookOpen, label: "Resources" },
+    { href: "/classes", icon: BookOpen, label: "Classes" },
     { href: "/profile", icon: Settings, label: "Profile" },
   ]
 

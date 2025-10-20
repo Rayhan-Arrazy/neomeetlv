@@ -1,199 +1,192 @@
-"use client"
+// frontend/pages/meetings.tsx
 
-import { useState } from "react"
-import { Button } from "../components/ui/button"
-import { Card, CardContent } from "../components/ui/card"
-import { Input } from "../components/ui/input"
-import { Badge } from "../components/ui/badge"
-import { Video, Plus, Clock, Users, Search, Settings } from "lucide-react"
-import Link from "next/link"
-import { BottomNavigation } from "../components/navigation"
-import { get } from "../../server/meetings";
+"use client";
 
+import { useState, useEffect } from "react";
+import { Button } from "../components/ui/button";
+import { Card, CardContent } from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Plus, Search, Video, Clock, ExternalLink, Edit, Trash2, X, Calendar } from "lucide-react";
+// --- FIX: Update the import path for useAuth ---
+import { useAuth } from "../signup/AuthContext";
+import { getMeetings, createMeeting, updateMeeting, deleteMeeting, Meeting } from "../lib/utils";
+import { BottomNavigation } from "../components/navigation";
 
 export default function MeetingsPage() {
-  const [searchQuery, setSearchQuery] = useState("")
+    const { user } = useAuth();
+    const [meetings, setMeetings] = useState<Meeting[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
 
-  // Mock data
-  const upcomingMeetings = [
-    {
-      id: 1,
-      title: "Team Standup",
-      time: "9:00 AM",
-      duration: "30 min",
-      participants: 8,
-      type: "recurring",
-      status: "starting-soon",
-    },
-    {
-      id: 2,
-      title: "Product Review",
-      time: "2:00 PM",
-      duration: "1 hour",
-      participants: 12,
-      type: "one-time",
-      status: "scheduled",
-    },
-    {
-      id: 3,
-      title: "Client Presentation",
-      time: "4:30 PM",
-      duration: "45 min",
-      participants: 6,
-      type: "one-time",
-      status: "scheduled",
-    },
-  ]
+    // Form states
+    const [showForm, setShowForm] = useState(false);
+    const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null);
+    const [formData, setFormData] = useState({ title: '', description: '', start_time: '', end_time: '', meeting_link: '' });
 
-  const recentMeetings = [
-    {
-      id: 4,
-      title: "Design Workshop",
-      date: "Yesterday",
-      duration: "2 hours",
-      participants: 15,
-      hasRecording: true,
-    },
-    {
-      id: 5,
-      title: "Sprint Planning",
-      date: "2 days ago",
-      duration: "1.5 hours",
-      participants: 10,
-      hasRecording: true,
-    },
-  ]
+    // --- FIX: Add a simple type to the 'role' parameter ---
+    const isAdmin = user?.roles.some((role: { name: string }) => role.name === 'admin');
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-20">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-4 py-4">
-        <div className="max-w-md mx-auto">
-          <h1 className="text-2xl font-bold text-slate-800">Meetings</h1>
-          <p className="text-slate-600">Manage your meetings and join sessions</p>
-        </div>
-      </div>
+    // ... the rest of the component code remains the same ...
+    useEffect(() => {
+        const fetchMeetings = async () => {
+            try {
+                const response = await getMeetings();
+                setMeetings(response.data);
+            } catch (err) {
+                setError('Failed to fetch meetings.');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchMeetings();
+    }, []);
 
-      <div className="max-w-md mx-auto p-4 space-y-6">
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-4">
-          <Link href="/meetings/join">
-            <Card className="border-0 shadow-lg rounded-2xl bg-blue-500 text-white hover:bg-blue-600 transition-colors">
-              <CardContent className="p-4 text-center">
-                <Video className="w-8 h-8 mx-auto mb-2" />
-                <p className="font-semibold">Join Meeting</p>
-              </CardContent>
-            </Card>
-          </Link>
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+        try {
+            if (editingMeeting) {
+                const response = await updateMeeting(editingMeeting.id, formData);
+                setMeetings(meetings.map(m => (m.id === editingMeeting.id ? response.data : m)));
+            } else {
+                const response = await createMeeting(formData);
+                setMeetings([...meetings, response.data]);
+            }
+            resetForm();
+        } catch (err) {
+            setError('Failed to save meeting.');
+        }
+    };
 
-          <Link href="/meetings/create">
-            <Card className="border-0 shadow-lg rounded-2xl bg-green-500 text-white hover:bg-green-600 transition-colors">
-              <CardContent className="p-4 text-center">
-                <Plus className="w-8 h-8 mx-auto mb-2" />
-                <p className="font-semibold">New Meeting</p>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
+    const handleDelete = async (id: number) => {
+        if (!confirm('Are you sure you want to delete this meeting?')) return;
+        try {
+            await deleteMeeting(id);
+            setMeetings(meetings.filter(m => m.id !== id));
+        } catch (err) {
+            setError('Failed to delete meeting.');
+        }
+    };
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-          <Input
-            placeholder="Search meetings..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-12 rounded-xl border-slate-200 focus:border-blue-500 focus:ring-blue-500"
-          />
-        </div>
+    const resetForm = () => {
+        setFormData({ title: '', description: '', start_time: '', end_time: '', meeting_link: '' });
+        setShowForm(false);
+        setEditingMeeting(null);
+    };
 
-        {/* Upcoming Meetings */}
-        <div>
-          <h2 className="text-lg font-semibold text-slate-800 mb-4">Upcoming</h2>
-          <div className="space-y-3">
-            {upcomingMeetings.map((meeting) => (
-              <Card key={meeting.id} className="border-0 shadow-lg rounded-2xl">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-slate-800">{meeting.title}</h3>
-                    {meeting.status === "starting-soon" && (
-                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Starting Soon</Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-4 text-sm text-slate-600 mb-3">
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      <span>
-                        {meeting.time} • {meeting.duration}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      <span>{meeting.participants} participants</span>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Link href={`/meetings/${meeting.id}`} className="flex-1">
-                      <Button
-                        className={`w-full rounded-xl ${
-                          meeting.status === "starting-soon"
-                            ? "bg-green-500 hover:bg-green-600"
-                            : "bg-blue-500 hover:bg-blue-600"
-                        }`}
-                      >
-                        {meeting.status === "starting-soon" ? "Join Now" : "Join Meeting"}
-                      </Button>
-                    </Link>
-                    <Button variant="outline" size="icon" className="rounded-xl bg-transparent">
-                      <Settings className="w-4 h-4" />
+    const handleEdit = (meetingItem: Meeting) => {
+        setEditingMeeting(meetingItem);
+        const formatDateTime = (dateTimeString: string) => new Date(dateTimeString).toISOString().slice(0, 16);
+        setFormData({
+            title: meetingItem.title,
+            description: meetingItem.description || '',
+            start_time: formatDateTime(meetingItem.start_time),
+            end_time: formatDateTime(meetingItem.end_time),
+            meeting_link: meetingItem.meeting_link || '',
+        });
+        setShowForm(true);
+    };
+
+    const filteredMeetings = meetings.filter(m =>
+        m.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    if (loading) return <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-20 flex items-center justify-center">Loading...</div>;
+    if (error) return <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-20 flex items-center justify-center text-red-500">{error}</div>;
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-20">
+            {/* Header */}
+            <div className="bg-white border-b border-slate-200 px-4 py-4">
+                <div className="max-w-md mx-auto">
+                    <h1 className="text-2xl font-bold text-slate-800">Meetings</h1>
+                    <p className="text-slate-600">Manage and join your meetings</p>
+                </div>
+            </div>
+
+            <div className="max-w-md mx-auto p-4 space-y-6">
+                {/* Admin-only Create Button */}
+                {isAdmin && (
+                    <Button onClick={() => setShowForm(true)} className="w-full rounded-xl bg-green-500 hover:bg-green-600">
+                        <Plus className="w-5 h-5 mr-2" /> Create New Meeting
                     </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+                )}
 
-        {/* Recent Meetings */}
-        <div>
-          <h2 className="text-lg font-semibold text-slate-800 mb-4">Recent</h2>
-          <div className="space-y-3">
-            {recentMeetings.map((meeting) => (
-              <Card key={meeting.id} className="border-0 shadow-lg rounded-2xl">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-slate-800">{meeting.title}</h3>
-                    {meeting.hasRecording && (
-                      <Badge variant="outline" className="text-blue-600 border-blue-200">
-                        Recorded
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-4 text-sm text-slate-600 mb-3">
-                    <span>{meeting.date}</span>
-                    <span>•</span>
-                    <span>{meeting.duration}</span>
-                    <span>•</span>
-                    <span>{meeting.participants} participants</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1 rounded-xl bg-transparent">
-                      View Details
-                    </Button>
-                    {meeting.hasRecording && (
-                      <Button variant="outline" className="flex-1 rounded-xl bg-transparent">
-                        Watch Recording
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </div>
+                {/* Create/Edit Form */}
+                {showForm && (
+                    <Card className="border-0 shadow-lg rounded-2xl">
+                        <CardContent className="p-4">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xl font-semibold">{editingMeeting ? 'Edit Meeting' : 'Create New Meeting'}</h2>
+                                <Button variant="ghost" size="icon" onClick={resetForm}><X className="w-4 h-4" /></Button>
+                            </div>
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <Input placeholder="Meeting Title" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} required />
+                                <Input type="datetime-local" value={formData.start_time} onChange={(e) => setFormData({ ...formData, start_time: e.target.value })} required />
+                                <Input type="datetime-local" value={formData.end_time} onChange={(e) => setFormData({ ...formData, end_time: e.target.value })} required />
+                                <Input type="url" placeholder="Meeting Link (e.g., Zoom)" value={formData.meeting_link} onChange={(e) => setFormData({ ...formData, meeting_link: e.target.value })} />
+                                <textarea placeholder="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full p-2 border rounded" rows={3}></textarea>
+                                <Button type="submit" className="w-full rounded-xl bg-blue-500 hover:bg-blue-600">
+                                    {editingMeeting ? 'Update Meeting' : 'Save Meeting'}
+                                </Button>
+                            </form>
+                        </CardContent>
+                    </Card>
+                )}
 
-      <BottomNavigation />
-    </div>
-  )
+                {/* Search */}
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <Input
+                        placeholder="Search meetings..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10 h-12 rounded-xl border-slate-200"
+                    />
+                </div>
+
+                {/* Meetings List */}
+                <div className="space-y-3">
+                    {filteredMeetings.map((meeting) => (
+                        <Card key={meeting.id} className="border-0 shadow-lg rounded-2xl">
+                            <CardContent className="p-4">
+                                <div className="flex items-start justify-between mb-3">
+                                    <div className="flex-1">
+                                        <h3 className="font-semibold text-slate-800">{meeting.title}</h3>
+                                        <p className="text-sm text-slate-600">by {meeting.user.name}</p>
+                                    </div>
+                                    {isAdmin && (
+                                        <div className="flex gap-2">
+                                            <Button size="icon" variant="outline" onClick={() => handleEdit(meeting)}><Edit className="w-4 h-4" /></Button>
+                                            <Button size="icon" variant="destructive" onClick={() => handleDelete(meeting.id)}><Trash2 className="w-4 h-4" /></Button>
+                                        </div>
+                                    )}
+                                </div>
+                                <p className="text-sm text-slate-600 mb-3">{meeting.description}</p>
+                                <div className="space-y-1 text-sm text-slate-600">
+                                    <div className="flex items-center gap-2">
+                                        <Calendar className="w-4 h-4" />
+                                        <span>{new Date(meeting.start_time).toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Clock className="w-4 h-4" />
+                                        <span>Ends: {new Date(meeting.end_time).toLocaleString()}</span>
+                                    </div>
+                                    {meeting.meeting_link && (
+                                        <a href={meeting.meeting_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-500 hover:underline">
+                                            <Video className="w-4 h-4" />
+                                            <span>Join Meeting</span>
+                                            <ExternalLink className="w-3 h-3" />
+                                        </a>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            </div>
+            <BottomNavigation />
+        </div>
+    );
 }
