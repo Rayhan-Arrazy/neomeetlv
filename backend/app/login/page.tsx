@@ -10,23 +10,36 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { ArrowLeft, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+// --- 1. Import the necessary auth hook and login function ---
+import { useAuth } from "../context/AuthContext"
+import { login } from "../lib/utils"
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  // --- 2. Add state for handling login errors ---
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  // --- 3. Get the login function from the AuthContext ---
+  const { login: authLogin } = useAuth()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null)
 
-    // Simulate login process
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // For demo purposes, redirect to dashboard
-    router.push("/dashboard")
+    // --- 4. Implement the actual API login call ---
+    try {
+      const response = await login({ email, password, device_name: 'browser' })
+      authLogin(response.data.user, response.data.access_token)
+      router.push("/dashboard")
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Login failed. Please check your credentials.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -52,6 +65,11 @@ export default function LoginPage() {
             <CardTitle className="text-2xl font-bold text-slate-800">Welcome Back</CardTitle>
             <p className="text-slate-600">Sign in to your account</p>
           </CardHeader>
+
+          {/* --- 5. Display the error message if it exists --- */}
+          {error && (
+            <div className="px-6 pb-4 text-center text-red-500">{error}</div>
+          )}
 
           <CardContent className="space-y-6">
             <form onSubmit={handleLogin} className="space-y-4">

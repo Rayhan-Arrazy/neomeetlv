@@ -11,6 +11,10 @@ use App\Http\Controllers\Api\MeetingController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+Route::get('/login', function () {
+    return redirect(env('FRONTEND_URL', 'http://localhost:3000') . '/login');
+})->name('login');
+
 // Protected Routes
 Route::middleware('auth:sanctum')->group(function () {
     // Auth
