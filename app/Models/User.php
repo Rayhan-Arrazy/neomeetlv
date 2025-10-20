@@ -6,11 +6,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use App\Models\Schedule;
+use App\Models\Course;
+use App\Models\Role;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -34,15 +38,32 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * The attributes that should be cast.
      *
-     * @return array<string, string>
+     * @var array<string,string>
      */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        // 'password' => 'hashed' can be used to auto-hash on set in newer Laravel versions,
+        // but we hash explicitly in controllers to avoid surprises when migrating legacy hashes.
+    ];
+
+    // Relationship: user has many schedules
+    public function schedules()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->hasMany(Schedule::class);
+    }
+
+    // Relationship: user has many classes (courses)
+    public function classes()
+    {
+        return $this->hasMany(Course::class);
+    }
+
+    // Roles relationship (optional - if you use a roles table)
+    public function roles()
+    {
+        // If your project uses a roles table, adjust accordingly. For now return empty relation to avoid errors.
+        return $this->belongsToMany(Role::class);
     }
 }

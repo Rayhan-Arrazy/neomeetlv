@@ -10,13 +10,11 @@ class Schedule extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
-        'event_title',
-        'start_time',
-        'end_time',
-        'location',
-        // Kolom baru
+        'title',
         'description',
+        'date',
+        'time',
+        'user_id',
         'type',
         'is_virtual',
         'meeting_link',
@@ -29,9 +27,8 @@ class Schedule extends Model
     ];
 
     protected $casts = [
-        'start_time' => 'datetime',
-        'end_time' => 'datetime',
-        'recurrence_end' => 'date',
+        'date' => 'date',
+        'time' => 'string',
         'is_virtual' => 'boolean',
         'is_recurring' => 'boolean',
         'is_private' => 'boolean',

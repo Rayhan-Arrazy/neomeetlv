@@ -20,6 +20,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::get('/me/export', [AuthController::class, 'exportMyData']);
 
     // --- CLASSES ROUTES ---
     Route::get('/classes', [ClassController::class, 'index']);
@@ -33,11 +34,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // --- SCHEDULES ROUTES ---
     Route::get('/schedules', [ScheduleController::class, 'index']);
     Route::get('/schedules/{schedule}', [ScheduleController::class, 'show']);
-    Route::middleware('role:admin')->group(function () {
-        Route::post('/schedules', [ScheduleController::class, 'store']);
-        Route::put('/schedules/{schedule}', [ScheduleController::class, 'update']);
-        Route::delete('/schedules/{schedule}', [ScheduleController::class, 'destroy']);
-    });
+    Route::post('/schedules', [ScheduleController::class, 'store']); // Allow any authenticated user to create schedules
+    Route::put('/schedules/{schedule}', [ScheduleController::class, 'update'])->middleware('can:update,schedule');
+    Route::delete('/schedules/{schedule}', [ScheduleController::class, 'destroy'])->middleware('can:delete,schedule');
 
     // --- MEETINGS ROUTES ---
     Route::get('/meetings', [MeetingController::class, 'index']);

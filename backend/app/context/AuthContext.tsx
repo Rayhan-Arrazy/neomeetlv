@@ -17,7 +17,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // On initial load, try to get user data from localStorage
         const storedUser = localStorage.getItem('user');
         const token = localStorage.getItem('access_token');
         if (storedUser && token) {
