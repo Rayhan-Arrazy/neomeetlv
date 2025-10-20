@@ -1,9 +1,10 @@
-// frontend/context/AuthContext.tsx
+// app/context/AuthContext.tsx
+
+"use client";
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { getMe, User } from '../lib/utils'; // Import User type and getMe function
+import { getMe, User } from '../lib/utils';
 
-// Define the shape of the context value
 interface AuthContextType {
     user: User | null;
     login: (userData: User, token: string) => void;
@@ -11,10 +12,8 @@ interface AuthContextType {
     loading: boolean;
 }
 
-// Create the context with a default value of null
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Define the type for the provider's props
 interface AuthProviderProps {
     children: ReactNode;
 }
@@ -29,7 +28,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             getMe().then(response => {
                 setUser(response.data);
             }).catch(() => {
-                // Token is invalid
                 localStorage.removeItem('access_token');
             }).finally(() => {
                 setLoading(false);
@@ -56,7 +54,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     );
 };
 
-// Custom hook to use the auth context
 export const useAuth = (): AuthContextType => {
     const context = useContext(AuthContext);
     if (!context) {

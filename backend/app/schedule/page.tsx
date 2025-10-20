@@ -10,7 +10,7 @@ import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input"; // This was the main missing import
 import { ChevronLeft, ChevronRight, Plus, Calendar, Clock, Edit, Trash2, X } from "lucide-react";
 // --- FIX: Update the import path for useAuth ---
-import { useAuth } from "../signup/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import { getSchedules, createSchedule, updateSchedule, deleteSchedule, Schedule } from "../lib/utils";
 import { BottomNavigation } from "../components/navigation";
 

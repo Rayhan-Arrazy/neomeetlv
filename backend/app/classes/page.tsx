@@ -8,7 +8,7 @@ import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Plus, Search, Clock, Edit, Trash2, X } from "lucide-react";
 // --- FIX: Update the import path for useAuth ---
-import { useAuth } from "../signup/AuthContext"; 
+import { useAuth } from "../context/AuthContext"; 
 import { getClasses, createClass, updateClass, deleteClass, Class } from "../lib/utils";
 import { BottomNavigation } from "../components/navigation";
 

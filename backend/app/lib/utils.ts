@@ -1,12 +1,17 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
-import axios from 'axios';
+// frontend/libs/utils.ts
 
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+// --- ADD THIS FUNCTION ---
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
-// frontend/libs/utils.ts
+// --- The rest of your existing file remains the same ---
+import axios from 'axios';
+
+// ... all your existing axios and API code ...
 
 // --- Axios Instance Setup ---
 const api = axios.create({

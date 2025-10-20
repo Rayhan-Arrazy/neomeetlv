@@ -1,26 +1,24 @@
-import type { Metadata } from 'next'
-import { GeistSans } from 'geist/font/sans'
-import { GeistMono } from 'geist/font/mono'
-import { Analytics } from '@vercel/analytics/next'
-import './globals.css'
+// app/layout.tsx
+
+import type { Metadata } from "next";
+import "./globals.css";
+import { AuthProvider } from "./context/AuthContext";
 
 export const metadata: Metadata = {
-  title: 'NEOMEET',
-  description: 'NEOMEET - Connect, Learn, Collaborate',
-  generator: 'Next.js',
-}
+  title: "NeoMeet",
+  description: "A meeting and class management app",
+};
 
 export default function RootLayout({
-  children, 
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        {children}
-        <Analytics />
+      <body>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
-  )
+  );
 }

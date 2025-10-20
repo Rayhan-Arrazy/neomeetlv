@@ -1,5 +1,3 @@
-// frontend/pages/meetings.tsx
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -8,7 +6,7 @@ import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Plus, Search, Video, Clock, ExternalLink, Edit, Trash2, X, Calendar } from "lucide-react";
 // --- FIX: Update the import path for useAuth ---
-import { useAuth } from "../signup/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import { getMeetings, createMeeting, updateMeeting, deleteMeeting, Meeting } from "../lib/utils";
 import { BottomNavigation } from "../components/navigation";
 

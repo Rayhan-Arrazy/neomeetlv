@@ -7,7 +7,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { ChevronLeft, ChevronRight, Plus, Calendar, Clock, MapPin, Users, Video, Edit, Trash2, X } from "lucide-react";
-import { useAuth } from "../signup/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import { getSchedules, createSchedule, updateSchedule, deleteSchedule, Schedule } from "../lib/utils";
 import { BottomNavigation } from "../components/navigation";
 

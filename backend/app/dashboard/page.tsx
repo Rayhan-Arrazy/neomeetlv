@@ -153,9 +153,17 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-7 gap-1 mb-2">
+            {/* <div className="grid grid-cols-7 gap-1 mb-2">
               {weekDays.map((day) => (
                 <div key={day} className="h-8 flex items-center justify-center">
+                  <span className="text-xs font-medium text-slate-500">{day}</span>
+                </div>
+              ))}
+            </div> */}
+            
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {weekDays.map((day, index) => (
+                <div key={index} className="h-8 flex items-center justify-center">
                   <span className="text-xs font-medium text-slate-500">{day}</span>
                 </div>
               ))}
