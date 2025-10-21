@@ -11,18 +11,40 @@ class MeetingController extends Controller
 {
     public function index(Request $request)
     {
-        return Meeting::with('user')->orderBy('start_time')->get();
+        $user = $request->user();
+        $query = Meeting::with('user')->orderBy('start_time');
+        
+        // Admin sees all meetings, regular users see only their own
+        if (!$user->roles->contains('name', 'admin')) {
+            $query->where('user_id', $user->id);
+        }
+        
+        return $query->get();
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'start_time' => 'required|date',
-            'end_time' => 'required|date|after_or_equal:start_time',
+            'description' => 'nullable|string',
+            'start_time' => 'required|date_format:Y-m-d H:i:s',
+            'end_time' => 'required|date_format:Y-m-d H:i:s|after:start_time',
+            'meeting_link' => 'nullable|string|max:255',
+            'is_virtual' => 'boolean',
+            'password' => 'required|string|min:6',
+            'max_participants' => 'integer|min:2|max:100',
+            'enable_chat' => 'boolean',
+            'enable_video' => 'boolean',
+            'enable_audio' => 'boolean',
+            'enable_screenshare' => 'boolean',
+            'ai_assistant_enabled' => 'boolean'
         ]);
 
-        $meeting = $request->user()->meetings()->create($request->all());
+        $data = $request->all();
+        $data['password'] = bcrypt($request->password); // Hash the meeting password
+        $data['meeting_link'] = 'https://meet.neomeet.app/' . \Str::random(10); // Generate meeting link
+
+        $meeting = $request->user()->meetings()->create($data);
 
         return response()->json($meeting, Response::HTTP_CREATED);
     }
@@ -34,13 +56,80 @@ class MeetingController extends Controller
 
     public function update(Request $request, Meeting $meeting)
     {
-        $meeting->update($request->all());
-        return response()->json($meeting);
+        // Check if user owns the meeting or is admin
+        if ($request->user()->id !== $meeting->user_id && !$request->user()->roles->contains('name', 'admin')) {
+            return response()->json(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
+        }
+
+        $request->validate([
+            'title' => 'sometimes|string|max:255',
+            'description' => 'nullable|string',
+            'start_time' => 'sometimes|date_format:Y-m-d H:i:s',
+            'end_time' => 'sometimes|date_format:Y-m-d H:i:s|after:start_time',
+            'meeting_link' => 'nullable|string|max:255',
+            'is_virtual' => 'boolean',
+            'password' => 'sometimes|string|min:6',
+            'max_participants' => 'integer|min:2|max:100',
+            'enable_chat' => 'boolean',
+            'enable_video' => 'boolean',
+            'enable_audio' => 'boolean',
+            'enable_screenshare' => 'boolean',
+            'ai_assistant_enabled' => 'boolean'
+        ]);
+
+        $data = $request->all();
+        if ($request->has('password')) {
+            $data['password'] = bcrypt($request->password);
+        }
+
+        $meeting->update($data);
+
+        return response()->json($meeting->load('user'));
     }
 
-    public function destroy(Meeting $meeting)
+    public function destroy(Request $request, Meeting $meeting)
     {
+        // Check if user owns the meeting or is admin
+        if ($request->user()->id !== $meeting->user_id && !$request->user()->roles->contains('name', 'admin')) {
+            return response()->json(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
+        }
+
         $meeting->delete();
         return response()->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    public function join(Request $request, Meeting $meeting)
+    {
+        $request->validate([
+            'password' => 'required|string'
+        ]);
+
+        // Verify meeting password
+        if (!password_verify($request->password, $meeting->password)) {
+            return response()->json(['message' => 'Invalid meeting password'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        // Check if meeting has started
+        if (now() < $meeting->start_time) {
+            return response()->json(['message' => 'Meeting has not started yet'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Check if meeting is over
+        if (now() > $meeting->end_time) {
+            return response()->json(['message' => 'Meeting has ended'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Return meeting details with connection info
+        return response()->json([
+            'meeting' => $meeting->load('user'),
+            'connection_info' => [
+                'url' => $meeting->meeting_link,
+                'enable_video' => $meeting->enable_video,
+                'enable_audio' => $meeting->enable_audio,
+                'enable_chat' => $meeting->enable_chat,
+                'enable_screenshare' => $meeting->enable_screenshare,
+                'ai_assistant_enabled' => $meeting->ai_assistant_enabled,
+            ]
+        ]);
     }
 }

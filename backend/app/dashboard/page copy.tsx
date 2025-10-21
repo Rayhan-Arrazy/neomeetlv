@@ -1,64 +1,23 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "../components/ui/button"
 import { Card, CardContent } from "../components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar"
 import { Video, Plus, Calendar, BookOpen, Settings, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import { BottomNavigation } from "../components/navigation"
-import { useAuth } from "../context/AuthContext"
-import { getSchedules, Schedule } from "../lib/utils"
 
 export default function DashboardPage() {
-  const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(new Date())
-  const [schedules, setSchedules] = useState<Schedule[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
-  // Load schedules from database
-  useEffect(() => {
-    const loadSchedules = async () => {
-      setLoading(true);
-      try {
-        const data = await getSchedules();
-        setSchedules(data.data);
-      } catch (err) {
-        setError('Failed to fetch schedules.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadSchedules();
-  }, []);
-
-  // Get today's stats
-  const todaySchedules = schedules.filter(schedule => 
-    new Date(schedule.date).toDateString() === new Date().toDateString()
-  );
-
+  // Mock data
+  const userName = "Alex Johnson"
   const todayStats = {
-    classes: todaySchedules.filter(s => s.type === 'class').length,
-    meetings: todaySchedules.filter(s => s.type === 'meeting').length,
+    classes: 3,
+    meetings: 2,
   }
-
-  // Get upcoming events (events from now onwards, sorted by date and time)
-  const getUpcomingEvents = () => {
-    const now = new Date();
-    return schedules
-      .filter(schedule => {
-        const scheduleDateTime = new Date(schedule.date + ' ' + schedule.time);
-        return scheduleDateTime >= now;
-      })
-      .sort((a, b) => {
-        const dateA = new Date(a.date + ' ' + a.time);
-        const dateB = new Date(b.date + ' ' + b.time);
-        return dateA.getTime() - dateB.getTime();
-      })
-      .slice(0, 5); // Get next 5 upcoming events
-  };
 
   // Calendar logic
   const today = new Date()
@@ -88,12 +47,6 @@ export default function DashboardPage() {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + (direction === "next" ? 1 : -1), 1))
   }
 
-  const getEventsForDate = (date: Date) => {
-    return schedules.filter(schedule => 
-      new Date(schedule.date).toDateString() === date.toDateString()
-    );
-  };
-
   const renderCalendarDays = () => {
     const days = []
 
@@ -107,8 +60,7 @@ export default function DashboardPage() {
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
       const isToday = date.toDateString() === today.toDateString()
       const isSelected = date.toDateString() === selectedDate.toDateString()
-      const dayEvents = getEventsForDate(date)
-      const hasEvents = dayEvents.length > 0
+      const hasEvent = day === 15 || day === 22 || day === 28 // Mock events
 
       days.push(
         <button
@@ -119,13 +71,13 @@ export default function DashboardPage() {
               ? "bg-blue-500 text-white"
               : isSelected
                 ? "bg-blue-100 text-blue-600"
-                : hasEvents
+                : hasEvent
                   ? "bg-orange-100 text-orange-600"
                   : "text-slate-700 hover:bg-slate-100"
           }`}
         >
           {day}
-        </button>
+        </button>,
       )
     }
 
@@ -157,7 +109,7 @@ export default function DashboardPage() {
       <div className="max-w-md mx-auto p-4 space-y-6">
         {/* Greeting */}
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Hello {user?.name?.split(" ")[0] || "User"}</h1>
+          <h1 className="text-2xl font-bold text-slate-800">Hello {userName.split(" ")[0]}</h1>
           <p className="text-slate-600">
             You have {todayStats.classes} classes and {todayStats.meetings} meetings today
           </p>
@@ -226,41 +178,20 @@ export default function DashboardPage() {
           <CardContent className="p-4">
             <h3 className="font-semibold text-slate-800 mb-3">Upcoming</h3>
             <div className="space-y-3">
-              {getUpcomingEvents().map((event) => {
-                const eventDate = new Date(event.date);
-                const isToday = eventDate.toDateString() === new Date().toDateString();
-                const isTomorrow = eventDate.toDateString() === new Date(Date.now() + 86400000).toDateString();
-                
-                let dateDisplay = isToday 
-                  ? "Today" 
-                  : isTomorrow 
-                    ? "Tomorrow" 
-                    : eventDate.toLocaleDateString("en-US", { weekday: 'long', month: 'short', day: 'numeric' });
-
-                return (
-                  <div 
-                    key={event.id} 
-                    className={`flex items-center gap-3 p-3 ${
-                      event.type === 'meeting' ? 'bg-blue-50' : 'bg-orange-50'
-                    } rounded-xl`}
-                  >
-                    <div className={`w-2 h-2 ${
-                      event.type === 'meeting' ? 'bg-blue-500' : 'bg-orange-500'
-                    } rounded-full`} />
-                    <div className="flex-1">
-                      <p className="font-medium text-slate-800">{event.event_title}</p>
-                      <p className="text-sm text-slate-600">
-                        {dateDisplay}, {event.start_time}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-              {getUpcomingEvents().length === 0 && (
-                <div className="text-center text-slate-500 py-4">
-                  No upcoming events
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl">
+                <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                <div className="flex-1">
+                  <p className="font-medium text-slate-800">Meeting with AI team</p>
+                  <p className="text-sm text-slate-600">Today, 2:00 PM</p>
                 </div>
-              )}
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-xl">
+                <div className="w-2 h-2 bg-orange-500 rounded-full" />
+                <div className="flex-1">
+                  <p className="font-medium text-slate-800">Advanced React Class</p>
+                  <p className="text-sm text-slate-600">Tomorrow, 10:00 AM</p>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

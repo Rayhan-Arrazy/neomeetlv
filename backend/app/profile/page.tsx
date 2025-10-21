@@ -147,7 +147,7 @@ export default function ProfilePage() {
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-4 py-4">
         <div className="max-w-md mx-auto">
-          <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Link href="/dashboard">
                 <Button variant="ghost" size="icon" className="mr-4">
@@ -156,9 +156,27 @@ export default function ProfilePage() {
               </Link>
               <h1 className="text-lg font-bold text-slate-800">Profile</h1>
             </div>
-            <Button variant="ghost" size="icon">
-              <Settings className="w-5 h-5" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon">
+                <Settings className="w-5 h-5" />
+              </Button>
+              <Button
+                onClick={async () => {
+                  localStorage.removeItem('token')
+                  await fetch('http://localhost:8000/api/logout', {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    },
+                  }).catch(() => {/* Ignore errors */})
+                  window.location.href = '/login'
+                }}
+                variant="destructive"
+                className="bg-red-500 hover:bg-red-600"
+              >
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </div>

@@ -60,10 +60,15 @@ class User extends Authenticatable
         return $this->hasMany(Course::class);
     }
 
-    // Roles relationship (optional - if you use a roles table)
+    // Roles relationship
     public function roles()
     {
-        // If your project uses a roles table, adjust accordingly. For now return empty relation to avoid errors.
         return $this->belongsToMany(Role::class);
+    }
+
+    // Meetings relationship
+    public function meetings()
+    {
+        return $this->hasMany(Meeting::class);
     }
 }

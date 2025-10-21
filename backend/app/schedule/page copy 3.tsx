@@ -23,20 +23,7 @@ export default function SchedulePage() {
     // Form states
     const [showForm, setShowForm] = useState(false);
     const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
-    const [formData, setFormData] = useState({
-        event_title: '',
-        description: '',
-        date: '',
-        start_time: '',
-        end_time: '',
-        type: 'meeting',
-        is_virtual: false,
-        meeting_link: '',
-        reminder: false,
-        is_private: false,
-        location: '',
-        attendees: ''
-    });
+    const [formData, setFormData] = useState({ title: '', description: '', date: '', time: '' });
 
     // --- FIX: Add a simple type to the 'role' parameter ---
     const isAdmin = user?.roles.some((role: { name: string }) => role.name === 'admin');
@@ -62,17 +49,11 @@ export default function SchedulePage() {
         e.preventDefault();
         setError(null);
         try {
-            const submitData = {
-                ...formData,
-                reminder: formData.reminder ? "1" : "0",
-                user_id: user?.id
-            };
-
             if (editingSchedule) {
-                const response = await updateSchedule(editingSchedule.id, submitData);
+                const response = await updateSchedule(editingSchedule.id, formData);
                 setEvents(events.map(s => (s.id === editingSchedule.id ? response.data : s)));
             } else {
-                const response = await createSchedule(submitData);
+                const response = await createSchedule(formData);
                 setEvents([...events, response.data]);
             }
             resetForm();
@@ -92,20 +73,7 @@ export default function SchedulePage() {
     };
 
     const resetForm = () => {
-        setFormData({
-            event_title: '',
-            description: '',
-            date: '',
-            start_time: '',
-            end_time: '',
-            type: 'meeting',
-            is_virtual: false,
-            meeting_link: '',
-            reminder: false,
-            is_private: false,
-            location: '',
-            attendees: ''
-        });
+        setFormData({ title: '', description: '', date: '', time: '' });
         setShowForm(false);
         setEditingSchedule(null);
     };
@@ -113,38 +81,15 @@ export default function SchedulePage() {
     const handleEdit = (scheduleItem: Schedule) => {
         setEditingSchedule(scheduleItem);
         setFormData({
-            event_title: scheduleItem.event_title,
+            title: scheduleItem.title,
             description: scheduleItem.description || '',
             date: scheduleItem.date,
-            start_time: scheduleItem.start_time,
-            end_time: scheduleItem.end_time,
-            type: scheduleItem.type || 'meeting',
-            is_virtual: scheduleItem.is_virtual,
-            meeting_link: scheduleItem.meeting_link || '',
-            reminder: scheduleItem.reminder === '1',
-            is_private: scheduleItem.is_private,
-            location: scheduleItem.location || '',
-            attendees: scheduleItem.attendees || ''
+            time: scheduleItem.time,
         });
         setShowForm(true);
     };
 
-    // Event management functions
-    const getUpcomingEvents = () => {
-        const now = new Date();
-        return events
-            .filter(event => {
-                const eventDateTime = new Date(`${event.date} ${event.start_time}`);
-                return eventDateTime >= now;
-            })
-            .sort((a, b) => {
-                const dateA = new Date(`${a.date} ${a.start_time}`);
-                const dateB = new Date(`${b.date} ${b.start_time}`);
-                return dateA.getTime() - dateB.getTime();
-            });
-    };
-
-    // Calendar Logic
+    // --- Calendar Logic (mostly unchanged from your original) ---
     const today = new Date();
     const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
@@ -194,97 +139,10 @@ export default function SchedulePage() {
                                 <Button variant="ghost" size="icon" onClick={resetForm}><X className="w-4 h-4" /></Button>
                             </div>
                             <form onSubmit={handleSubmit} className="space-y-4">
-                                <Input 
-                                    placeholder="Schedule Title" 
-                                    value={formData.event_title} 
-                                    onChange={(e) => setFormData({ ...formData, event_title: e.target.value })} 
-                                    required 
-                                />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="block text-sm">Date</label>
-                                        <Input 
-                                            type="date" 
-                                            value={formData.date} 
-                                            onChange={(e) => setFormData({ ...formData, date: e.target.value })} 
-                                            required 
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="block text-sm">Type</label>
-                                        <select 
-                                            className="w-full p-2 border rounded"
-                                            value={formData.type}
-                                            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                                        >
-                                            <option value="meeting">Meeting</option>
-                                            <option value="class">Class</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="block text-sm">Start Time</label>
-                                        <Input 
-                                            type="time" 
-                                            value={formData.start_time} 
-                                            onChange={(e) => setFormData({ ...formData, start_time: e.target.value })} 
-                                            required 
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="block text-sm">End Time</label>
-                                        <Input 
-                                            type="time" 
-                                            value={formData.end_time} 
-                                            onChange={(e) => setFormData({ ...formData, end_time: e.target.value })} 
-                                            required 
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="block text-sm">Location</label>
-                                    <Input 
-                                        placeholder="Location" 
-                                        value={formData.location} 
-                                        onChange={(e) => setFormData({ ...formData, location: e.target.value })} 
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="block text-sm">Description</label>
-                                    <textarea 
-                                        placeholder="Description" 
-                                        value={formData.description} 
-                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
-                                        className="w-full p-2 border rounded" 
-                                        rows={3}
-                                    />
-                                </div>
-                                <div className="flex gap-4">
-                                    <label className="flex items-center gap-2">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={formData.is_virtual} 
-                                            onChange={(e) => setFormData({ ...formData, is_virtual: e.target.checked })} 
-                                        />
-                                        Virtual
-                                    </label>
-                                    <label className="flex items-center gap-2">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={formData.reminder} 
-                                            onChange={(e) => setFormData({ ...formData, reminder: e.target.checked })} 
-                                        />
-                                        Set Reminder
-                                    </label>
-                                </div>
-                                {formData.is_virtual && (
-                                    <Input 
-                                        placeholder="Meeting Link" 
-                                        value={formData.meeting_link} 
-                                        onChange={(e) => setFormData({ ...formData, meeting_link: e.target.value })} 
-                                    />
-                                )}
+                                <Input placeholder="Schedule Title" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} required />
+                                <Input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} required />
+                                <Input type="time" value={formData.time} onChange={(e) => setFormData({ ...formData, time: e.target.value })} required />
+                                <textarea placeholder="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full p-2 border rounded" rows={3}></textarea>
                                 <Button type="submit" className="w-full rounded-xl bg-blue-500 hover:bg-blue-600">
                                     {editingSchedule ? 'Update Schedule' : 'Save Schedule'}
                                 </Button>
@@ -335,7 +193,7 @@ export default function SchedulePage() {
                                 <Card key={event.id} className="border-0 shadow-lg rounded-2xl">
                                     <CardContent className="p-4">
                                         <div className="flex items-start justify-between mb-2">
-                                            <h4 className="font-semibold text-slate-800">{event.event_title}</h4>
+                                            <h4 className="font-semibold text-slate-800">{event.title}</h4>
                                             {isAdmin && (
                                                 <div className="flex gap-2">
                                                     <Button size="icon" variant="outline" onClick={() => handleEdit(event)}><Edit className="w-4 h-4" /></Button>
@@ -344,14 +202,9 @@ export default function SchedulePage() {
                                             )}
                                         </div>
                                         <p className="text-sm text-slate-600 mb-2">{event.description}</p>
-                                        <div className="flex items-center justify-between text-sm text-slate-600">
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="w-4 h-4" />
-                                                <span>{event.start_time} - {event.end_time}</span>
-                                            </div>
-                                            <div>
-                                                {event.is_virtual ? 'Virtual Meeting' : event.location}
-                                            </div>
+                                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                                            <Clock className="w-4 h-4" />
+                                            <span>{event.time}</span>
                                         </div>
                                     </CardContent>
                                 </Card>

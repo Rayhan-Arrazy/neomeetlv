@@ -1,0 +1,338 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Button } from "../components/ui/button";
+import { Card, CardContent } from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { ChevronLeft, ChevronRight, Plus, Edit, Trash2, X } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { getSchedules, createSchedule, updateSchedule, deleteSchedule, Schedule } from "../lib/utils";
+import { BottomNavigation } from "../components/navigation";
+
+export default function SchedulePage() {
+    const { user } = useAuth();
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [schedules, setSchedules] = useState<Schedule[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    // Form states
+    const [showForm, setShowForm] = useState(false);
+    const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
+    const [formData, setFormData] = useState({
+        event_title: '',
+        description: '',
+        type: 'meeting',
+        date: '',
+        start_time: '',
+        end_time: '',
+        location: '',
+        is_virtual: false,
+        meeting_link: '',
+        is_recurring: false,
+        reminder: false,
+        is_private: false,
+        attendees: ''
+    });
+
+    const isAdmin = user?.roles.some((role: { name: string }) => role.name === 'admin');
+
+    const loadSchedules = async () => {
+        setLoading(true);
+        try {
+            const data = await getSchedules();
+            setSchedules(data.data);
+        } catch (err) {
+            setError('Failed to fetch schedules.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadSchedules();
+    }, []);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+        try {
+            if (editingSchedule) {
+                const response = await updateSchedule(editingSchedule.id, {
+                    ...formData,
+                    reminder: formData.reminder ? "1" : "0"
+                });
+                setSchedules(schedules.map(s => (s.id === editingSchedule.id ? response.data : s)));
+            } else {
+                const response = await createSchedule({
+                    ...formData,
+                    reminder: formData.reminder ? "1" : "0"
+                });
+                setSchedules([...schedules, response.data]);
+            }
+            resetForm();
+        } catch (err) {
+            setError('Failed to save schedule.');
+        }
+    };
+
+    const handleDelete = async (id: number) => {
+        if (!confirm('Are you sure you want to delete this schedule?')) return;
+        try {
+            await deleteSchedule(id);
+            loadSchedules();
+        } catch (err) {
+            setError('Failed to delete schedule.');
+        }
+    };
+
+    const resetForm = () => {
+        setFormData({
+            event_title: '',
+            description: '',
+            type: 'meeting',
+            date: '',
+            start_time: '',
+            end_time: '',
+            location: '',
+            is_virtual: false,
+            meeting_link: '',
+            is_recurring: false,
+            reminder: false,
+            is_private: false,
+            attendees: ''
+        });
+        setShowForm(false);
+        setEditingSchedule(null);
+    };
+
+    const handleEdit = (scheduleItem: Schedule) => {
+        setEditingSchedule(scheduleItem);
+        setFormData({
+            event_title: scheduleItem.event_title,
+            description: scheduleItem.description || '',
+            type: scheduleItem.type,
+            date: scheduleItem.date,
+            start_time: scheduleItem.start_time,
+            end_time: scheduleItem.end_time,
+            location: scheduleItem.location,
+            is_virtual: scheduleItem.is_virtual,
+            meeting_link: scheduleItem.meeting_link || '',
+            is_recurring: false,
+            reminder: scheduleItem.reminder === "1",
+            is_private: false,
+            attendees: scheduleItem.attendees || ''
+        });
+        setShowForm(true);
+    };
+
+    const getSchedulesForDate = (date: Date) => {
+        return schedules.filter((schedule) => new Date(schedule.date).toDateString() === date.toDateString());
+    };
+
+    const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+
+    const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    const today = new Date();
+    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+    const firstDayWeekday = firstDayOfMonth.getDay();
+    const daysInMonth = lastDayOfMonth.getDate();
+
+    const navigateMonth = (direction: "prev" | "next") => {
+        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + (direction === "next" ? 1 : -1), 1));
+    };
+
+    const renderCalendarDays = () => {
+        const days = [];
+
+        for (let i = 0; i < firstDayWeekday; i++) {
+            days.push(<div key={`empty-${i}`} className="h-12" />);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+            const isToday = date.toDateString() === today.toDateString();
+            const isSelected = date.toDateString() === selectedDate.toDateString();
+            const dayEvents = getSchedulesForDate(date);
+            const hasEvents = dayEvents.length > 0;
+
+            days.push(
+                <button
+                    key={day}
+                    onClick={() => setSelectedDate(date)}
+                    className={`h-12 w-full rounded-lg text-sm font-medium transition-colors relative ${
+                        isToday
+                            ? "bg-blue-500 text-white"
+                            : isSelected
+                                ? "bg-blue-100 text-blue-600"
+                                : hasEvents
+                                    ? "bg-slate-100 text-slate-800 hover:bg-slate-200"
+                                    : "text-slate-700 hover:bg-slate-100"
+                    }`}
+                >
+                    {day}
+                    {hasEvents && (
+                        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
+                            {dayEvents.slice(0, 3).map((_, index) => (
+                                <div
+                                    key={index}
+                                    className="w-1 h-1 rounded-full bg-blue-500"
+                                />
+                            ))}
+                        </div>
+                    )}
+                </button>
+            );
+        }
+        return days;
+    };
+
+    if (loading) {
+        return <div>Loading schedules...</div>;
+    }
+
+    if (error) {
+        return <div className="text-red-500">{error}</div>;
+    }
+
+    return (
+        <div className="container mx-auto p-4">
+            <div className="grid grid-cols-1 gap-4">
+                <Card>
+                    <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-2xl font-bold">
+                                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                            </h2>
+                            <div className="flex gap-2">
+                                <Button variant="outline" onClick={() => navigateMonth("prev")}>
+                                    <ChevronLeft className="w-4 h-4" />
+                                </Button>
+                                <Button variant="outline" onClick={() => navigateMonth("next")}>
+                                    <ChevronRight className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-7 gap-2">
+                            {weekDays.map((day) => (
+                                <div key={day} className="text-sm font-medium text-center text-slate-500">
+                                    {day}
+                                </div>
+                            ))}
+                            {renderCalendarDays()}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent className="p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-2xl font-bold">
+                                Schedules for {selectedDate.toDateString()}
+                            </h2>
+                            <Button onClick={() => setShowForm(true)}>
+                                <Plus className="w-4 h-4 mr-2" />
+                                Add Schedule
+                            </Button>
+                        </div>
+
+                        {showForm && (
+                            <form onSubmit={handleSubmit} className="space-y-4 mb-4">
+                                <div className="space-y-2">
+                                    <label className="block">Title</label>
+                                    <Input 
+                                        placeholder="Event Title"
+                                        value={formData.event_title}
+                                        onChange={(e) => setFormData({ ...formData, event_title: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="block">Description</label>
+                                    <Input 
+                                        placeholder="Event Description"
+                                        value={formData.description}
+                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="block">Date</label>
+                                        <Input 
+                                            type="date"
+                                            value={formData.date}
+                                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="block">Start Time</label>
+                                        <Input 
+                                            type="time"
+                                            value={formData.start_time}
+                                            onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="block">End Time</label>
+                                        <Input 
+                                            type="time"
+                                            value={formData.end_time}
+                                            onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="block">Location</label>
+                                        <Input 
+                                            placeholder="Event Location"
+                                            value={formData.location}
+                                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                    <Button type="button" variant="outline" onClick={resetForm}>Cancel</Button>
+                                    <Button type="submit">{editingSchedule ? 'Update' : 'Create'}</Button>
+                                </div>
+                            </form>
+                        )}
+
+                        <div className="space-y-4">
+                            {getSchedulesForDate(selectedDate).map((schedule) => (
+                                <div key={schedule.id} className="flex items-center justify-between p-4 border rounded-lg">
+                                    <div>
+                                        <h3 className="font-semibold">{schedule.event_title}</h3>
+                                        <p className="text-sm text-gray-500">
+                                            {schedule.start_time} - {schedule.end_time}
+                                        </p>
+                                        <p className="text-sm text-gray-500">
+                                            {schedule.location} {schedule.is_virtual && '(Virtual)'}
+                                        </p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button variant="ghost" onClick={() => handleEdit(schedule)}>
+                                            <Edit className="w-4 h-4" />
+                                        </Button>
+                                        <Button variant="ghost" onClick={() => handleDelete(schedule.id)}>
+                                            <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+            <BottomNavigation />
+        </div>
+    );
+}

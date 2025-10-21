@@ -48,12 +48,23 @@ export interface Class {
 
 export interface Schedule {
     id: number;
-    title: string;
+    event_title: string;
     description: string | null;
-    date: string; 
-    time: string; 
+    type: string;
+    date: string;
+    start_time: string;
+    end_time: string;
+    location: string;
+    is_virtual: boolean;
+    meeting_link?: string;
+    attendees?: string;
+    is_recurring: boolean;
+    recurrence_pattern?: string;
+    recurrence_end?: string;
+    reminder: string;
+    is_private: boolean;
     user_id: number;
-    user: User;
+    user?: User;
 }
 
 export interface Meeting {
