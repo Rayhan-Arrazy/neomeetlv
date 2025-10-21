@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -11,7 +12,8 @@ import { getMeetings, createMeeting, updateMeeting, deleteMeeting, Meeting } fro
 import { BottomNavigation } from "../components/navigation";
 
 export default function MeetingsPage() {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
+    const router = useRouter();
     const [meetings, setMeetings] = useState<Meeting[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -29,16 +31,37 @@ export default function MeetingsPage() {
     useEffect(() => {
         const fetchMeetings = async () => {
             try {
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    logout();
+                    router.push('/login');
+                    return;
+                }
+
                 const response = await getMeetings();
                 setMeetings(response.data);
-            } catch (err) {
-                setError('Failed to fetch meetings.');
+                setError(null);
+            } catch (err: any) {
+                console.error('Meetings fetch error:', err);
+                if (err.response?.status === 401) {
+                    logout();
+                    router.push('/login');
+                } else {
+                    setError('Failed to fetch meetings. Please try again.');
+                }
             } finally {
                 setLoading(false);
             }
         };
+
+        if (!user) {
+            router.push('/login');
+            return;
+        }
+
+        setLoading(true);
         fetchMeetings();
-    }, []);
+    }, [user, logout, router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

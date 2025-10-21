@@ -14,6 +14,7 @@ const api = axios.create({
         'Content-Type': 'application/json',
         'Accept': 'application/json',
     },
+    withCredentials: true, // Enable sending cookies and auth headers
 });
 
 api.interceptors.request.use((config) => {
@@ -22,7 +23,24 @@ api.interceptors.request.use((config) => {
         config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
+}, (error) => {
+    return Promise.reject(error);
 });
+
+// Add response interceptor to handle auth errors
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            // Clear invalid token
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('user');
+            // Redirect to login if needed
+            window.location.href = '/login';
+        }
+        return Promise.reject(error);
+    }
+);
 
 export interface User {
     id: number;

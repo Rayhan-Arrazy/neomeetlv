@@ -170,54 +170,10 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        // 4. Create schedules for each user
-        $users = User::all();
-        $eventTypes = ['meeting', 'class', 'workshop', 'presentation', 'interview', 'consultation'];
-        $locations = [
-            'Main Conference Room',
-            'Room A101',
-            'Room B202',
-            'Auditorium',
-            'Online',
-            'Study Hall',
-            'Library'
-        ];
-
-        foreach ($users as $user) {
-            // Create 5 different schedules for each user
-            for ($i = 0; $i < 5; $i++) {
-                $startDate = now()->addDays(rand(1, 30));
-                $startHour = rand(9, 16);
-                $duration = rand(1, 3);
-                $startTime = sprintf("%02d:00:00", $startHour);
-                $endTime = sprintf("%02d:00:00", $startHour + $duration);
-                
-                $isVirtual = (bool)rand(0, 1);
-                $location = $isVirtual ? 'Online' : $locations[array_rand(array_filter($locations, fn($loc) => $loc !== 'Online'))];
-
-                Schedule::firstOrCreate(
-                    [
-                        'event_title' => fake()->sentence(3),
-                        'date' => $startDate->format('Y-m-d'),
-                        'start_time' => $startTime,
-                        'user_id' => $user->id
-                    ],
-                    [
-                        'description' => fake()->paragraph(2),
-                        'type' => $eventTypes[array_rand($eventTypes)],
-                        'end_time' => $endTime,
-                        'location' => $location,
-                        'is_virtual' => $isVirtual,
-                        'meeting_link' => $isVirtual ? 'https://meet.example.com/' . \Str::random(10) : null,
-                        'attendees' => json_encode(fake()->randomElements(['alice@example.com', 'bob@example.com', 'carol@example.com', 'david@example.com', 'john.smith@example.com', 'sarah.wilson@example.com'], rand(2, 4))),
-                        'is_recurring' => (bool)rand(0, 1),
-                        'recurrence_pattern' => fake()->randomElement(['daily', 'weekly', 'monthly']),
-                        'recurrence_end' => $startDate->copy()->addMonths(rand(1, 3))->format('Y-m-d'),
-                        'reminder' => fake()->randomElement(['5', '15', '30', '60']),
-                        'is_private' => (bool)rand(0, 1)
-                    ]
-                );
-            }
-        }
+        // 4. Seed schedules and meetings
+        $this->call([
+            ScheduleSeeder::class,
+            MeetingSeeder::class,
+        ]);
     }
 }
