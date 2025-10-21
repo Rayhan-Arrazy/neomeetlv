@@ -5,7 +5,6 @@ import { useAuth } from "../context/AuthContext"
 import { Meeting, Schedule, Class, getMeetings, getSchedules, getClasses } from "../lib/utils"
 import { Button } from "../components/ui/button"
 import { Card, CardContent } from "../components/ui/card"
-import { BottomNavigation } from "../components/navigation"
 import { Badge } from "../components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
@@ -418,8 +417,12 @@ export default function ProfilePage() {
           </TabsContent>
         </Tabs>
       </div>
-
       <BottomNavigation />
+    </div>
+  )
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   )
 }
