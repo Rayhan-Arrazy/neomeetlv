@@ -89,9 +89,17 @@ export interface Meeting {
     id: number;
     title: string;
     description: string | null;
-    start_time: string; 
-    end_time: string;  
+    start_time: string;
+    end_time: string;
     meeting_link: string | null;
+    is_virtual: boolean;
+    password: string;
+    max_participants: number;
+    enable_chat: boolean;
+    enable_video: boolean;
+    enable_audio: boolean;
+    enable_screenshare: boolean;
+    ai_assistant_enabled: boolean;
     user_id: number;
     user: User;
 }

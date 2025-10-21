@@ -30,18 +30,29 @@ class MeetingController extends Controller
             'start_time' => 'required|date_format:Y-m-d H:i:s',
             'end_time' => 'required|date_format:Y-m-d H:i:s|after:start_time',
             'meeting_link' => 'nullable|string|max:255',
-            'is_virtual' => 'boolean',
-            'password' => 'required|string|min:6',
-            'max_participants' => 'integer|min:2|max:100',
-            'enable_chat' => 'boolean',
-            'enable_video' => 'boolean',
-            'enable_audio' => 'boolean',
-            'enable_screenshare' => 'boolean',
-            'ai_assistant_enabled' => 'boolean'
+            'is_virtual' => 'boolean|nullable',
+            'password' => 'nullable|string|min:6',
+            'max_participants' => 'integer|min:2|max:100|nullable',
+            'enable_chat' => 'boolean|nullable',
+            'enable_video' => 'boolean|nullable',
+            'enable_audio' => 'boolean|nullable',
+            'enable_screenshare' => 'boolean|nullable',
+            'ai_assistant_enabled' => 'boolean|nullable'
         ]);
 
-        $data = $request->all();
-        $data['password'] = bcrypt($request->password); // Hash the meeting password
+        $data = array_merge([
+            'is_virtual' => true,
+            'password' => \Str::random(8),
+            'max_participants' => 10,
+            'enable_chat' => true,
+            'enable_video' => true,
+            'enable_audio' => true,
+            'enable_screenshare' => true,
+            'ai_assistant_enabled' => false
+        ], $request->all());
+
+        // Hash the meeting password if provided or use the default one
+        $data['password'] = bcrypt($data['password']);
         $data['meeting_link'] = 'https://meet.neomeet.app/' . \Str::random(10); // Generate meeting link
 
         $meeting = $request->user()->meetings()->create($data);
