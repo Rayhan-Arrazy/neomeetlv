@@ -12,7 +12,7 @@ class ScheduleController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $query = Schedule::with('user')->orderBy('date')->orderBy('time');
+        $query = Schedule::with('user')->orderBy('date')->orderBy('start_time');
         
         // Admin sees all schedules, regular users see only their own
         if (!$user->roles->contains('name', 'admin')) {
