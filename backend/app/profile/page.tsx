@@ -31,12 +31,22 @@ import Link from "next/link"
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [stats, setStats] = useState({
     meetingsCount: 0,
     classesCount: 0,
     schedulesCount: 0,
   });
+
+  if (isAuthLoading) {
+    return <div>Loading...</div>; // Or a proper loading spinner
+  }
+
+  if (!user) {
+    // Redirect to login page if not authenticated
+    window.location.href = '/login';
+    return null; // Render nothing while redirecting
+  }
 
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
@@ -212,7 +222,7 @@ export default function ProfilePage() {
             <div className="flex items-end justify-between mb-4">
               <div className="relative">
                 <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
-                  <AvatarImage src="/professional-headshot.png" />
+                  <AvatarImage src={user?.avatar_url} />
                   <AvatarFallback className="bg-blue-500 text-white text-xl font-bold">FJ</AvatarFallback>
                 </Avatar>
                 <Button

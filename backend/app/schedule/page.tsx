@@ -35,7 +35,10 @@ export default function SchedulePage() {
         reminder: false,
         is_private: false,
         location: '',
-        attendees: ''
+        attendees: '',
+        is_recurring: false,
+        recurrence_pattern: '',
+        recurrence_end: ''
     });
 
     // --- FIX: Add a simple type to the 'role' parameter ---
@@ -62,10 +65,24 @@ export default function SchedulePage() {
         e.preventDefault();
         setError(null);
         try {
+            if (!formData.date || !formData.start_time || !formData.end_time || !formData.event_title) {
+                setError('Please fill in all required fields.');
+                return;
+            }
+
             const submitData = {
                 ...formData,
+                type: formData.type || 'meeting',
                 reminder: formData.reminder ? "1" : "0",
-                user_id: user?.id
+                is_virtual: Boolean(formData.is_virtual),
+                is_recurring: Boolean(formData.is_recurring),
+                is_private: Boolean(formData.is_private),
+                recurrence_pattern: formData.recurrence_pattern || undefined,
+                recurrence_end: formData.recurrence_end || undefined,
+                description: formData.description || '',
+                location: formData.location || '',
+                meeting_link: formData.meeting_link || '',
+                attendees: formData.attendees || ''
             };
 
             if (editingSchedule) {
@@ -104,28 +121,34 @@ export default function SchedulePage() {
             reminder: false,
             is_private: false,
             location: '',
-            attendees: ''
+            attendees: '',
+            is_recurring: false,
+            recurrence_pattern: '',
+            recurrence_end: ''
         });
         setShowForm(false);
         setEditingSchedule(null);
     };
 
     const handleEdit = (scheduleItem: Schedule) => {
-        setEditingSchedule(scheduleItem);
         setFormData({
-            event_title: scheduleItem.event_title,
+            event_title: scheduleItem.event_title || '',
             description: scheduleItem.description || '',
-            date: scheduleItem.date,
-            start_time: scheduleItem.start_time,
-            end_time: scheduleItem.end_time,
-            type: scheduleItem.type || 'meeting',
-            is_virtual: scheduleItem.is_virtual,
+            date: scheduleItem.date || '',
+            start_time: scheduleItem.start_time || '',
+            end_time: scheduleItem.end_time || '',
+            type: scheduleItem.type || '',
+            is_virtual: Boolean(scheduleItem.is_virtual),
             meeting_link: scheduleItem.meeting_link || '',
-            reminder: scheduleItem.reminder === '1',
-            is_private: scheduleItem.is_private,
+            reminder: Boolean(scheduleItem.reminder),
+            is_private: Boolean(scheduleItem.is_private),
             location: scheduleItem.location || '',
-            attendees: scheduleItem.attendees || ''
+            attendees: scheduleItem.attendees || '',
+            is_recurring: Boolean(scheduleItem.is_recurring),
+            recurrence_pattern: scheduleItem.recurrence_pattern || '',
+            recurrence_end: scheduleItem.recurrence_end || ''
         });
+        setEditingSchedule(scheduleItem);
         setShowForm(true);
     };
 

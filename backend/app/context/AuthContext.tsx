@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
-        const token = localStorage.getItem('access_token');
+        const token = localStorage.getItem('token'); // Changed from 'access_token' to 'token'
         if (storedUser && token) {
             setUser(JSON.parse(storedUser));
         }
@@ -27,13 +27,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const login = (userData: User, token: string) => {
         localStorage.setItem('user', JSON.stringify(userData));
-        localStorage.setItem('access_token', token);
+        localStorage.setItem('token', token); // Changed from 'access_token' to 'token'
         setUser(userData);
     };
 
     const logout = () => {
         localStorage.removeItem('user');
-        localStorage.removeItem('access_token');
+        localStorage.removeItem('token'); // Changed from 'access_token' to 'token'
         setUser(null);
     };
 

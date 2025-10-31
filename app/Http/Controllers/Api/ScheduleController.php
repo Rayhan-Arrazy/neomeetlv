@@ -54,20 +54,41 @@ class ScheduleController extends Controller
 
     public function update(Request $request, Schedule $schedule)
     {
+        // Check if user owns the schedule or is admin
+        if ($request->user()->id !== $schedule->user_id && !$request->user()->roles->contains('name', 'admin')) {
+            return response()->json(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
+        }
+
         $request->validate([
-            'title' => 'sometimes|required|string|max:255',
+            'event_title' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
+            'type' => 'nullable|string|max:50',
             'date' => 'sometimes|required|date',
-            'time' => 'sometimes|required|date_format:H:i',
+            'start_time' => 'sometimes|required|date_format:H:i',
+            'end_time' => 'sometimes|required|date_format:H:i|after:start_time',
+            'location' => 'nullable|string|max:255',
+            'is_virtual' => 'boolean',
+            'meeting_link' => 'nullable|string|max:255',
+            'attendees' => 'nullable|string',
+            'is_recurring' => 'boolean',
+            'recurrence_pattern' => 'nullable|string|in:daily,weekly,monthly',
+            'recurrence_end' => 'nullable|date|after:date',
+            'reminder' => 'nullable|string',
+            'is_private' => 'boolean',
         ]);
 
         $schedule->update($request->all());
 
-        return response()->json($schedule);
+        return response()->json($schedule->load('user'));
     }
 
-    public function destroy(Schedule $schedule)
+    public function destroy(Request $request, Schedule $schedule)
     {
+        // Check if user owns the schedule or is admin
+        if ($request->user()->id !== $schedule->user_id && !$request->user()->roles->contains('name', 'admin')) {
+            return response()->json(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
+        }
+
         $schedule->delete();
 
         return response()->json(null, Response::HTTP_NO_CONTENT);

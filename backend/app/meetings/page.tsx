@@ -37,10 +37,8 @@ export default function MeetingsPage() {
         ai_assistant_enabled: false
     });
 
-    // --- FIX: Add a simple type to the 'role' parameter ---
     const isAdmin = user?.roles.some((role: { name: string }) => role.name === 'admin');
 
-    // ... the rest of the component code remains the same ...
     useEffect(() => {
         const fetchMeetings = async () => {
             try {

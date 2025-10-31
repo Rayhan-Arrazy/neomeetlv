@@ -25,15 +25,35 @@ export default function SignUpPage() {
   const router = useRouter()
 
   const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
-    // Simulate signup process
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const response = await fetch('http://localhost:8000/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          password: formData.password,
+          password_confirmation: formData.confirmPassword,
+        }),
+      });
 
-    // For demo purposes, redirect to dashboard
-    router.push("/dashboard")
-  }
+      if (response.ok) {
+        router.push("/login");
+      } else {
+        // Handle errors
+        console.error("Sign up failed");
+      }
+    } catch (error) {
+      console.error("An error occurred during sign up", error);
+    }
+
+    setIsLoading(false);
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))

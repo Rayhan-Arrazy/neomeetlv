@@ -4,18 +4,19 @@ export interface Schedule {
     id: number;
     user_id: number;
     event_title: string;
+    date: string;  // Required in database
     start_time: string;
     end_time: string;
-    location: string;
+    type: string;  // Has default in database
+    location?: string;
     description?: string;
-    type?: string;
     is_virtual: boolean;
     meeting_link?: string;
     attendees?: string;
     is_recurring: boolean;
     recurrence_pattern?: string;
     recurrence_end?: string;
-    reminder: string;
+    reminder?: string;  // Should be optional
     is_private: boolean;
 }
 

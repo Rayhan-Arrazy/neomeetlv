@@ -18,7 +18,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('token'); // Changed from 'access_token' to 'token'
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
@@ -33,7 +33,7 @@ api.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401) {
             // Clear invalid token
-            localStorage.removeItem('access_token');
+            localStorage.removeItem('token'); // Changed from 'access_token' to 'token'
             localStorage.removeItem('user');
             // Redirect to login if needed
             window.location.href = '/login';
@@ -120,8 +120,32 @@ export const updateClass = (id: number, data: Partial<Omit<Class, 'id' | 'user_i
 export const deleteClass = (id: number) => api.delete(`/classes/${id}`);
 
 export const getSchedules = () => api.get<Schedule[]>('/schedules');
-export const createSchedule = (data: Omit<Schedule, 'id' | 'user_id' | 'user'>) => api.post<Schedule>('/schedules', data);
-export const updateSchedule = (id: number, data: Partial<Omit<Schedule, 'id' | 'user_id' | 'user'>>) => api.put<Schedule>(`/schedules/${id}`, data);
+export const createSchedule = async (data: Omit<Schedule, 'id' | 'user_id' | 'user'>) => {
+    try {
+        const response = await api.post<Schedule>('/schedules', data);
+        return response;
+    } catch (error: any) {
+        if (error.response?.data?.errors) {
+            console.error('Validation errors:', error.response.data.errors);
+            throw new Error(Object.values(error.response.data.errors).flat().join(', '));
+        }
+        throw error;
+    }
+};
+
+export const updateSchedule = async (id: number, data: Partial<Omit<Schedule, 'id' | 'user_id' | 'user'>>) => {
+    try {
+        const response = await api.put<Schedule>(`/schedules/${id}`, data);
+        return response;
+    } catch (error: any) {
+        if (error.response?.data?.errors) {
+            console.error('Validation errors:', error.response.data.errors);
+            throw new Error(Object.values(error.response.data.errors).flat().join(', '));
+        }
+        throw error;
+    }
+};
+
 export const deleteSchedule = (id: number) => api.delete(`/schedules/${id}`);
 
 export const getMeetings = () => api.get<Meeting[]>('/meetings');
