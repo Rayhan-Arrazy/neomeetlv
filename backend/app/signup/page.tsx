@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { ArrowLeft, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import axios from 'axios';
 
 export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -29,20 +30,14 @@ export default function SignUpPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/api/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: `${formData.firstName} ${formData.lastName}`,
-          email: formData.email,
-          password: formData.password,
-          password_confirmation: formData.confirmPassword,
-        }),
+      const response = await axios.post('http://localhost:8000/api/register', {
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        password: formData.password,
+        password_confirmation: formData.confirmPassword,
       });
 
-      if (response.ok) {
+      if (response.status === 201) {
         router.push("/login");
       } else {
         // Handle errors

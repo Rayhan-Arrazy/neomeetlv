@@ -8,16 +8,23 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+        Log::info('Register request received', $request->all());
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validation failed', $e->errors());
+            throw $e;
+        }
 
         $user = User::create([
             'name' => $request->name,
@@ -27,7 +34,7 @@ class AuthController extends Controller
 
         $token = $user->createToken('api-token')->plainTextToken;
 
-    return response()->json(['access_token' => $token, 'token_type' => 'Bearer', 'user' => $user->load(['roles','classes','schedules'])], Response::HTTP_CREATED);
+        return response()->json(['access_token' => $token, 'token_type' => 'Bearer', 'user' => $user->load(['roles','classes','schedules'])], Response::HTTP_CREATED);
     }
 
     public function login(Request $request)
