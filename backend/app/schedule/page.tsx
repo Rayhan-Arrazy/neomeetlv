@@ -19,6 +19,7 @@ export default function SchedulePage() {
     const [error, setError] = useState<string | null>(null);
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(new Date());
+    const [searchQuery, setSearchQuery] = useState("");
 
     // Form states
     const [showForm, setShowForm] = useState(false);
@@ -185,6 +186,11 @@ export default function SchedulePage() {
     };
     // --- End Calendar Logic ---
 
+    const filteredEvents = events.filter(event =>
+        (event.event_title && event.event_title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (event.description && event.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+
     if (loading) return <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-20 flex items-center justify-center">Loading...</div>;
     if (error) return <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-20 flex items-center justify-center text-red-500">{error}</div>;
 
@@ -208,180 +214,227 @@ export default function SchedulePage() {
             </div>
 
             <div className="max-w-md mx-auto p-4 space-y-6">
-                {/* Create/Edit Form Modal */}
-                {showForm && (
-                    <Card className="border-0 shadow-lg rounded-2xl">
-                        <CardContent className="p-4">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-xl font-semibold">{editingSchedule ? 'Edit Schedule' : 'Create New Schedule'}</h2>
-                                <Button variant="ghost" size="icon" onClick={resetForm}><X className="w-4 h-4" /></Button>
-                            </div>
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <Input 
-                                    placeholder="Schedule Title" 
-                                    value={formData.event_title} 
-                                    onChange={(e) => setFormData({ ...formData, event_title: e.target.value })} 
-                                    required 
-                                />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="block text-sm">Date</label>
-                                        <Input 
-                                            type="date" 
-                                            value={formData.date} 
-                                            onChange={(e) => setFormData({ ...formData, date: e.target.value })} 
-                                            required 
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="block text-sm">Type</label>
-                                        <select 
-                                            className="w-full p-2 border rounded"
-                                            value={formData.type}
-                                            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                                        >
-                                            <option value="meeting">Meeting</option>
-                                            <option value="class">Class</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="block text-sm">Start Time</label>
-                                        <Input 
-                                            type="time" 
-                                            value={formData.start_time} 
-                                            onChange={(e) => setFormData({ ...formData, start_time: e.target.value })} 
-                                            required 
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="block text-sm">End Time</label>
-                                        <Input 
-                                            type="time" 
-                                            value={formData.end_time} 
-                                            onChange={(e) => setFormData({ ...formData, end_time: e.target.value })} 
-                                            required 
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="block text-sm">Location</label>
-                                    <Input 
-                                        placeholder="Location" 
-                                        value={formData.location} 
-                                        onChange={(e) => setFormData({ ...formData, location: e.target.value })} 
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="block text-sm">Description</label>
-                                    <textarea 
-                                        placeholder="Description" 
-                                        value={formData.description} 
-                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
-                                        className="w-full p-2 border rounded" 
-                                        rows={3}
-                                    />
-                                </div>
-                                <div className="flex gap-4">
-                                    <label className="flex items-center gap-2">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={formData.is_virtual} 
-                                            onChange={(e) => setFormData({ ...formData, is_virtual: e.target.checked })} 
-                                        />
-                                        Virtual
-                                    </label>
-                                    <label className="flex items-center gap-2">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={formData.reminder} 
-                                            onChange={(e) => setFormData({ ...formData, reminder: e.target.checked })} 
-                                        />
-                                        Set Reminder
-                                    </label>
-                                </div>
-                                {formData.is_virtual && (
-                                    <Input 
-                                        placeholder="Meeting Link" 
-                                        value={formData.meeting_link} 
-                                        onChange={(e) => setFormData({ ...formData, meeting_link: e.target.value })} 
-                                    />
-                                )}
-                                <Button type="submit" className="w-full rounded-xl bg-blue-500 hover:bg-blue-600">
-                                    {editingSchedule ? 'Update Schedule' : 'Save Schedule'}
-                                </Button>
-                            </form>
-                        </CardContent>
-                    </Card>
-                )}
+                <Input
+                    placeholder="Search events..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full"
+                />
 
-                {/* Calendar Component (unchanged) */}
-                <Card className="border-0 shadow-lg rounded-2xl">
-                    <CardContent className="p-4">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-slate-800">{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</h2>
-                            <div className="flex gap-1">
-                                <Button variant="ghost" size="icon" onClick={() => navigateMonth("prev")}><ChevronLeft className="w-4 h-4" /></Button>
-                                <Button variant="ghost" size="icon" onClick={() => navigateMonth("next")}><ChevronRight className="w-4 h-4" /></Button>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-7 gap-1 mb-2">{weekDays.map((day) => (<div key={day} className="h-8 flex items-center justify-center"><span className="text-xs font-medium text-slate-500">{day}</span></div>))}</div>
-                        <div className="grid grid-cols-7 gap-1">
-                            {Array.from({ length: firstDayWeekday }).map((_, i) => (<div key={`empty-${i}`} className="h-12" />))}
-                            {Array.from({ length: daysInMonth }).map((_, i) => {
-                                const day = i + 1;
-                                const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-                                const isToday = date.toDateString() === today.toDateString();
-                                const isSelected = date.toDateString() === selectedDate.toDateString();
-                                const dayEvents = getEventsForDate(date);
-                                const hasEvents = dayEvents.length > 0;
-                                return (
-                                    <button key={day} onClick={() => setSelectedDate(date)} className={`h-12 w-full rounded-lg text-sm font-medium transition-colors relative ${isToday ? "bg-blue-500 text-white" : isSelected ? "bg-blue-100 text-blue-600" : hasEvents ? "bg-slate-100 text-slate-800 hover:bg-slate-200" : "text-slate-700 hover:bg-slate-100"}`}>
-                                        {day}
-                                        {hasEvents && (<div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">{dayEvents.slice(0, 3).map((_, index) => (<div key={index} className="w-1.5 h-1.5 rounded-full bg-blue-500" />))}</div>)}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Selected Date Events List */}
-                <div>
-                    <h3 className="text-lg font-semibold text-slate-800 mb-4">{selectedDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</h3>
-                    {getEventsForDate(selectedDate).length === 0 ? (
-                        <Card className="border-0 shadow-lg rounded-2xl"><CardContent className="p-6 text-center"><Calendar className="w-12 h-12 text-slate-400 mx-auto mb-3" /><p className="text-slate-600">No events scheduled for this day</p></CardContent></Card>
-                    ) : (
-                        <div className="space-y-3">
-                            {getEventsForDate(selectedDate).map((event) => (
-                                <Card key={event.id} className="border-0 shadow-lg rounded-2xl">
-                                    <CardContent className="p-4">
-                                        <div className="flex items-start justify-between mb-2">
-                                            <h4 className="font-semibold text-slate-800">{event.event_title}</h4>
-                                            {isAdmin && (
-                                                <div className="flex gap-2">
-                                                    <Button size="icon" variant="outline" onClick={() => handleEdit(event)}><Edit className="w-4 h-4" /></Button>
-                                                    <Button size="icon" variant="destructive" onClick={() => handleDelete(event.id)}><Trash2 className="w-4 h-4" /></Button>
+                {searchQuery ? (
+                    <div>
+                        <h3 className="text-lg font-semibold text-slate-800 mb-4">Search Results</h3>
+                        {filteredEvents.length === 0 ? (
+                            <Card className="border-0 shadow-lg rounded-2xl"><CardContent className="p-6 text-center"><Calendar className="w-12 h-12 text-slate-400 mx-auto mb-3" /><p className="text-slate-600">No events found.</p></CardContent></Card>
+                        ) : (
+                            <div className="space-y-3">
+                                {filteredEvents.map((event) => (
+                                    <Card key={event.id} className="border-0 shadow-lg rounded-2xl">
+                                        <CardContent className="p-4">
+                                            <div className="flex items-start justify-between mb-2">
+                                                <h4 className="font-semibold text-slate-800">{event.event_title}</h4>
+                                                {isAdmin && (
+                                                    <div className="flex gap-2">
+                                                        <Button size="icon" variant="outline" onClick={() => handleEdit(event)}><Edit className="w-4 h-4" /></Button>
+                                                        <Button size="icon" variant="destructive" onClick={() => handleDelete(event.id)}><Trash2 className="w-4 h-4" /></Button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <p className="text-sm text-slate-500 mb-2">{new Date(event.date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</p>
+                                            <p className="text-sm text-slate-600 mb-2">{event.description}</p>
+                                            <div className="flex items-center justify-between text-sm text-slate-600">
+                                                <div className="flex items-center gap-2">
+                                                    <Clock className="w-4 h-4" />
+                                                    <span>{event.start_time} - {event.end_time}</span>
                                                 </div>
-                                            )}
-                                        </div>
-                                        <p className="text-sm text-slate-600 mb-2">{event.description}</p>
-                                        <div className="flex items-center justify-between text-sm text-slate-600">
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="w-4 h-4" />
-                                                <span>{event.start_time} - {event.end_time}</span>
+                                                <div>
+                                                    {event.is_virtual ? 'Virtual Meeting' : event.location}
+                                                </div>
                                             </div>
-                                            <div>
-                                                {event.is_virtual ? 'Virtual Meeting' : event.location}
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <>
+                        {/* Create/Edit Form Modal */}
+                        {showForm && (
+                            <Card className="border-0 shadow-lg rounded-2xl">
+                                <CardContent className="p-4">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h2 className="text-xl font-semibold">{editingSchedule ? 'Edit Schedule' : 'Create New Schedule'}</h2>
+                                        <Button variant="ghost" size="icon" onClick={resetForm}><X className="w-4 h-4" /></Button>
+                                    </div>
+                                    <form onSubmit={handleSubmit} className="space-y-4">
+                                        <Input
+                                            placeholder="Schedule Title"
+                                            value={formData.event_title}
+                                            onChange={(e) => setFormData({ ...formData, event_title: e.target.value })}
+                                            required
+                                        />
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="block text-sm">Date</label>
+                                                <Input
+                                                    type="date"
+                                                    value={formData.date}
+                                                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-sm">Type</label>
+                                                <select
+                                                    className="w-full p-2 border rounded"
+                                                    value={formData.type}
+                                                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                                                >
+                                                    <option value="meeting">Meeting</option>
+                                                    <option value="class">Class</option>
+                                                </select>
                                             </div>
                                         </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="block text-sm">Start Time</label>
+                                                <Input
+                                                    type="time"
+                                                    value={formData.start_time}
+                                                    onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-sm">End Time</label>
+                                                <Input
+                                                    type="time"
+                                                    value={formData.end_time}
+                                                    onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="block text-sm">Location</label>
+                                            <Input
+                                                placeholder="Location"
+                                                value={formData.location}
+                                                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="block text-sm">Description</label>
+                                            <textarea
+                                                placeholder="Description"
+                                                value={formData.description}
+                                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                                className="w-full p-2 border rounded"
+                                                rows={3}
+                                            />
+                                        </div>
+                                        <div className="flex gap-4">
+                                            <label className="flex items-center gap-2">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.is_virtual}
+                                                    onChange={(e) => setFormData({ ...formData, is_virtual: e.target.checked })}
+                                                />
+                                                Virtual
+                                            </label>
+                                            <label className="flex items-center gap-2">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.reminder}
+                                                    onChange={(e) => setFormData({ ...formData, reminder: e.target.checked })}
+                                                />
+                                                Set Reminder
+                                            </label>
+                                        </div>
+                                        {formData.is_virtual && (
+                                            <Input
+                                                placeholder="Meeting Link"
+                                                value={formData.meeting_link}
+                                                onChange={(e) => setFormData({ ...formData, meeting_link: e.target.value })}
+                                            />
+                                        )}
+                                        <Button type="submit" className="w-full rounded-xl bg-blue-500 hover:bg-blue-600">
+                                            {editingSchedule ? 'Update Schedule' : 'Save Schedule'}
+                                        </Button>
+                                    </form>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Calendar Component (unchanged) */}
+                        <Card className="border-0 shadow-lg rounded-2xl">
+                            <CardContent className="p-4">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-lg font-semibold text-slate-800">{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</h2>
+                                    <div className="flex gap-1">
+                                        <Button variant="ghost" size="icon" onClick={() => navigateMonth("prev")}><ChevronLeft className="w-4 h-4" /></Button>
+                                        <Button variant="ghost" size="icon" onClick={() => navigateMonth("next")}><ChevronRight className="w-4 h-4" /></Button>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-7 gap-1 mb-2">{weekDays.map((day) => (<div key={day} className="h-8 flex items-center justify-center"><span className="text-xs font-medium text-slate-500">{day}</span></div>))}</div>
+                                <div className="grid grid-cols-7 gap-1">
+                                    {Array.from({ length: firstDayWeekday }).map((_, i) => (<div key={`empty-${i}`} className="h-12" />))}
+                                    {Array.from({ length: daysInMonth }).map((_, i) => {
+                                        const day = i + 1;
+                                        const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                                        const isToday = date.toDateString() === today.toDateString();
+                                        const isSelected = date.toDateString() === selectedDate.toDateString();
+                                        const dayEvents = getEventsForDate(date);
+                                        const hasEvents = dayEvents.length > 0;
+                                        return (
+                                            <button key={day} onClick={() => setSelectedDate(date)} className={`h-12 w-full rounded-lg text-sm font-medium transition-colors relative ${isToday ? "bg-blue-500 text-white" : isSelected ? "bg-blue-100 text-blue-600" : hasEvents ? "bg-slate-100 text-slate-800 hover:bg-slate-200" : "text-slate-700 hover:bg-slate-100"}`}>
+                                                {day}
+                                                {hasEvents && (<div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">{dayEvents.slice(0, 3).map((_, index) => (<div key={index} className="w-1.5 h-1.5 rounded-full bg-blue-500" />))}</div>)}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Selected Date Events List */}
+                        <div>
+                            <h3 className="text-lg font-semibold text-slate-800 mb-4">{selectedDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</h3>
+                            {getEventsForDate(selectedDate).length === 0 ? (
+                                <Card className="border-0 shadow-lg rounded-2xl"><CardContent className="p-6 text-center"><Calendar className="w-12 h-12 text-slate-400 mx-auto mb-3" /><p className="text-slate-600">No events scheduled for this day</p></CardContent></Card>
+                            ) : (
+                                <div className="space-y-3">
+                                    {getEventsForDate(selectedDate).map((event) => (
+                                        <Card key={event.id} className="border-0 shadow-lg rounded-2xl">
+                                            <CardContent className="p-4">
+                                                <div className="flex items-start justify-between mb-2">
+                                                    <h4 className="font-semibold text-slate-800">{event.event_title}</h4>
+                                                    {isAdmin && (
+                                                        <div className="flex gap-2">
+                                                            <Button size="icon" variant="outline" onClick={() => handleEdit(event)}><Edit className="w-4 h-4" /></Button>
+                                                            <Button size="icon" variant="destructive" onClick={() => handleDelete(event.id)}><Trash2 className="w-4 h-4" /></Button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <p className="text-sm text-slate-600 mb-2">{event.description}</p>
+                                                <div className="flex items-center justify-between text-sm text-slate-600">
+                                                    <div className="flex items-center gap-2">
+                                                        <Clock className="w-4 h-4" />
+                                                        <span>{event.start_time} - {event.end_time}</span>
+                                                    </div>
+                                                    <div>
+                                                        {event.is_virtual ? 'Virtual Meeting' : event.location}
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                    )}
-                </div>
+                    </>
+                )}
             </div>
             <BottomNavigation />
         </div>

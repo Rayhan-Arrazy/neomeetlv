@@ -18,6 +18,14 @@ class ScheduleController extends Controller
         if (!$user->roles->contains('name', 'admin')) {
             $query->where('user_id', $user->id);
         }
+
+        if ($request->has('search')) {
+            $searchTerm = $request->search;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('event_title', 'like', "%{$searchTerm}%")
+                  ->orWhere('description', 'like', "%{$searchTerm}%");
+            });
+        }
         
         return $query->get();
     }

@@ -9,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:8000/api', 
+    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api', 
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -119,7 +119,10 @@ export const createClass = (data: Omit<Class, 'id' | 'user_id' | 'user'>) => api
 export const updateClass = (id: number, data: Partial<Omit<Class, 'id' | 'user_id' | 'user'>>) => api.put<Class>(`/classes/${id}`, data);
 export const deleteClass = (id: number) => api.delete(`/classes/${id}`);
 
-export const getSchedules = () => api.get<Schedule[]>('/schedules');
+export const getSchedules = (searchTerm?: string) => {
+    const params = searchTerm ? { search: searchTerm } : {};
+    return api.get<Schedule[]>('/schedules', { params });
+};
 export const createSchedule = async (data: Omit<Schedule, 'id' | 'user_id' | 'user'>) => {
     try {
         const response = await api.post<Schedule>('/schedules', data);
