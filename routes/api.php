@@ -8,12 +8,12 @@ use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\MeetingController;
 
 // Public Routes
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register'])->name('api.register');
+Route::post('/login', [AuthController::class, 'login'])->name('api.login.post');
 
 Route::get('/login', function () {
-    return redirect(env('FRONTEND_URL', 'http://localhost:3000') . '/login');
-})->name('login');
+    return redirect(env('FRONTEND_URL', 'http://localhost:8000') . '/login');
+})->name('api.login');
 
 // Protected Routes
 Route::middleware('auth:sanctum')->group(function () {

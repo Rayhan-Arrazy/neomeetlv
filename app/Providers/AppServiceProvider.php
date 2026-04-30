@@ -21,5 +21,13 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Vite::prefetch(concurrency: 3);
+
+        \Illuminate\Support\Facades\Gate::define('create-meeting', function ($user) {
+            return $user->hasAnyRole(['admin', 'instructor']);
+        });
+
+        \Illuminate\Support\Facades\Gate::define('manage-classes', function ($user) {
+            return $user->hasAnyRole(['admin', 'instructor']);
+        });
     }
 }
