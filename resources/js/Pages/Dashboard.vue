@@ -16,14 +16,13 @@ defineProps<{
     <Head title="Dashboard" />
 
     <AuthenticatedLayout>
-        <template #header>
-            <h2 class="text-2xl font-black text-white tracking-tight">
-                Dashboard Overview
-            </h2>
-        </template>
-
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-8">
+        <div class="py-8 md:py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-3xl font-black text-white tracking-tight">Dashboard Overview</h2>
+                    <p class="text-slate-400 mt-1">Welcome back! Here's what's happening today.</p>
+                </div>
+            </div>
                 <!-- Stats Grid -->
                 <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                     <div class="p-6 glass-card rounded-3xl border border-blue-500/20">
@@ -141,6 +140,5 @@ defineProps<{
                     </div>
                 </div>
             </div>
-        </div>
     </AuthenticatedLayout>
 </template>

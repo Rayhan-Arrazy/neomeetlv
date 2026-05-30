@@ -13,7 +13,7 @@ const props = defineProps<{
 }>();
 
 const jitsiContainer = ref<HTMLElement | null>(null);
-let jitsiApi: any = null;
+const jitsiApi = ref<any>(null);
 
 onMounted(() => {
     const domain = "meet.jit.si";
@@ -50,14 +50,14 @@ onMounted(() => {
     script.async = true;
     script.onload = () => {
         // @ts-ignore
-        jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
+        jitsiApi.value = new window.JitsiMeetExternalAPI(domain, options);
     };
     document.head.appendChild(script);
 });
 
 onBeforeUnmount(() => {
-    if (jitsiApi) {
-        jitsiApi.dispose();
+    if (jitsiApi.value) {
+        jitsiApi.value.dispose();
     }
 });
 
